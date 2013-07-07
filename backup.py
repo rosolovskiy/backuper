@@ -143,8 +143,12 @@ def _get_last_revision(_client, _file, log):
     except rest.ErrorResponse as e:
         # uploading for the first ime
         log.debug(e)
-        log.info("No metadata is received, probably it is the first attempt to upload the given file")
-        return None
+        not_found = e.status == 404
+        if not_found:
+            log.info("No metadata is received, probably it is the first attempt to upload the given file")
+            return None
+        else:
+            raise e
     else:
         assert not file_metadata.get('is_dir', False), "Directory support not implemented yet"
         log.info("Metadata received, size %s, revision: %s, modified: %s", file_metadata.get('size'),
