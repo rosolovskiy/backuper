@@ -30,7 +30,7 @@ import ConfigParser
 import shelve
 from whichdb import whichdb
 
-from dropbox import client, session
+from dropbox import client, rest, session
 
 LOGGER_NAME = "backup"
 EXIT_SUCCESS = 0
@@ -138,11 +138,18 @@ def _get_last_revision(_client, _file, log):
     assert not path.isdir(_file), "Directory support not implemented yet"
     remote_filename = _build_dropbox_filename(_file)
     log.info("Requesting metadata for %s", remote_filename)
-    file_metadata = _client.metadata(remote_filename)
-    assert not file_metadata.get('is_dir', False), "Directory support not implemented yet"
-    log.info("Metadata received, size %s, revision: %s, modified: %s", file_metadata.get('size'),
+    try:
+        file_metadata = _client.metadata(remote_filename)
+    except rest.ErrorResponse as e:
+        # uploading for the first ime
+        log.debug(e)
+        log.info("No metadata is received, probably it is the first attempt to upload the given file")
+        return None
+    else:
+        assert not file_metadata.get('is_dir', False), "Directory support not implemented yet"
+        log.info("Metadata received, size %s, revision: %s, modified: %s", file_metadata.get('size'),
              file_metadata.get('rev'), file_metadata.get('modified'))
-    return file_metadata.get('rev', None)
+        return file_metadata.get('rev', None)
 
 
 def _build_dropbox_filename(_file):
