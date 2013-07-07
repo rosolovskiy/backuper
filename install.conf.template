@@ -1,0 +1,4 @@
+[dropbox]
+app_key=YOUR_DROPBOX_APP_KEY
+app_secret=YOUR_DROPBOX_APP_SECRET
+access_type=YOUR_DROPBOX_APP_ACCESS_TYPE
